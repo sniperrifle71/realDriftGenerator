@@ -1,10 +1,8 @@
 from torch.utils.data import DataLoader
 from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
-from torch.optim.lr_scheduler import LambdaLR
 import torch
 import pandas as pd
-from skmultiflow.bayes import NaiveBayes
 import numpy as np
 from tqdm import tqdm
 

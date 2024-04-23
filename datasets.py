@@ -74,7 +74,7 @@ class elecDataset(Dataset):
 
     def initTupleList(self, drift_dict):
         tupleList = []
-        df = pd.read_csv("./electricity-normalized.csv",
+        df = pd.read_csv("./eval_dataset/electricity-normalized.csv",
                          usecols=["nswprice", "nswdemand", "vicprice", "vicdemand", "transfer", "class"],
                          nrows=self.stream_length)
 
@@ -132,7 +132,7 @@ class weatherDataset(Dataset):
     def initTupleList(self, drift_dict):
         tupleList = []
 
-        df = pd.read_csv("./seattle-weather.csv", nrows=self.stream_length,
+        df = pd.read_csv("./eval_dataset/seattle-weather.csv", nrows=self.stream_length,
                                  usecols=["precipitation", "temp_max", "temp_min", "wind", "weather"])
         class_dict = {"drizzle": 0, "rain": 1, "sun": 2, "snow": 3, "fog": 4}
         df["weather"] = df["weather"].apply(lambda x: class_dict[x])

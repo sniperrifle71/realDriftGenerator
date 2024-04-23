@@ -1,20 +1,29 @@
 import pandas as pd
 import numpy as np
-from util import reverseSlice
+
 
 class RealDriftGenerator:
+    """
+    RealDriftGenerator generates concept drift with user-defined position, width in target source time-series dataset
+    """
 
-    def __init__(self, df):
+    def __init__(self, df: pd.DataFrame) -> None:
+        """
+        :param df: source time-series dataset
+        """
         self.origin_df = df
         self.reverse_df = pd.DataFrame(index=range(self.origin_df.shape[0]), columns=self.origin_df.columns
                                        , dtype=np.float32)
         self.drift_dict = {}
 
-    def updateDrift(self, add_drift_dict):
-        self.drift_dict = add_drift_dict
-        return True
+    def DriftSmooth(self, drift_area: pd.DataFrame, drift_mode="middle") -> pd.DataFrame:
+        """
+        Smooth the concept drift with a width of 1 to the user defined drift width
 
-    def DriftSmooth(self, drift_area, drift_mode="middle"):
+        :param drift_area: expected drift area
+        :param drift_mode: Just use middle
+        :return:smoothed expected drift area
+        """
         smooth_drift = drift_area.copy()
         if drift_mode == "left" or drift_mode == "middle":
             right_ewm = drift_area.ewm(span=5).mean()
@@ -27,8 +36,13 @@ class RealDriftGenerator:
             smooth_drift.iloc[0: len(drift_area) // 2, :] = left_fit_values[::-1]
         return smooth_drift
 
-    def reverseSlice(self, drift_dict):
-        self.updateDrift(drift_dict)
+    def reverseSlice(self, drift_dict: dict) -> pd.DataFrame:
+        """
+        Generate concept drift in the source time series dataset
+        :param drift_dict: {position:(width, drift_mode)}, contains user-defined drift details
+        :return: time series dataset with concept drift.
+        """
+        self.drift_dict = drift_dict
         slice_idx = list(self.drift_dict.keys())
         slice_idx.append(0)
         slice_idx.append(self.origin_df.shape[0])
@@ -49,7 +63,8 @@ class RealDriftGenerator:
 
                 self.reverse_df.iloc[reverse_slice_idx - (drift_width // 2): reverse_slice_idx + (drift_width // 2),
                 :] = self.DriftSmooth(
-                    self.reverse_df.iloc[reverse_slice_idx - (drift_width // 2): reverse_slice_idx + (drift_width // 2), :],
+                    self.reverse_df.iloc[reverse_slice_idx - (drift_width // 2): reverse_slice_idx + (drift_width // 2),
+                    :],
                     drift_mode=drift_mode
                 )
 
@@ -57,7 +72,6 @@ class RealDriftGenerator:
 
 
 if __name__ == "__main__":
-
     df = pd.read_csv("../seattle-weather.csv", nrows=1000,
                      usecols=["precipitation", "temp_max", "temp_min", "wind", "weather"])
     class_dict = {"drizzle": 0, "rain": 1, "sun": 2, "snow": 3, "fog": 4}
@@ -68,5 +82,3 @@ if __name__ == "__main__":
     stream = RealDriftGenerator(df)
     df = stream.reverseSlice(drift_dict={700: (100, "middle")})
     df.to_csv("./weather_p700_w100_l1000.csv")
-
-
