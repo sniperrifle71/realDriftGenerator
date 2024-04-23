@@ -2,10 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
-from util import reverseSlice
 from RealDriftGenerator import RealDriftGenerator
-
-
 
 
 class multiflowDataset(Dataset):
@@ -29,7 +26,7 @@ class multiflowDataset(Dataset):
         features_std = df.iloc[:, :-1].std()
         df.iloc[:, :-1] = (df.iloc[:, :-1] - features_mean) / features_std
 
-        class_dim = df.iloc[:, df.shape[1] - 1].max()+1
+        class_dim = df.iloc[:, df.shape[1] - 1].max() + 1
         feature_dim = df.shape[1] - 1
         for i in range(df.shape[0]):
             features = df.iloc[i, 0:df.shape[1] - 1]
@@ -41,7 +38,7 @@ class multiflowDataset(Dataset):
         divide_idx = 0
         seq_list = []
         while divide_idx + self.seq_length < len(self.tupleList):
-            seq = torch.zeros([self.seq_length, self.feature_dim+1])
+            seq = torch.zeros([self.seq_length, self.feature_dim + 1])
             seqTuple = self.tupleList[divide_idx: divide_idx + self.seq_length]
             for i in range(self.seq_length):
                 seq[i, :self.feature_dim] = torch.from_numpy(seqTuple[i][0].values.astype(np.float32))
@@ -79,8 +76,8 @@ class elecDataset(Dataset):
                          nrows=self.stream_length)
 
         df["class"] = df["class"].apply(lambda element: 1 if element == "UP" else 0)
-        feature_dim = df.shape[1]-1
-        class_dim = int(df.iloc[:, feature_dim].max())+1
+        feature_dim = df.shape[1] - 1
+        class_dim = int(df.iloc[:, feature_dim].max()) + 1
         stream = RealDriftGenerator(df)
 
         if drift_dict is not None:
@@ -116,6 +113,7 @@ class elecDataset(Dataset):
         label = torch.eye(2)[int(self.seqList[item][-1, 5])]
         return features, label
 
+
 class weatherDataset(Dataset):
     def __init__(self, seq_length=8, train=True, online=False, train_ratio=0.8, drift_dict=None, stream_length=1000):
         super(weatherDataset, self).__init__()
@@ -133,12 +131,12 @@ class weatherDataset(Dataset):
         tupleList = []
 
         df = pd.read_csv("./eval_dataset/seattle-weather.csv", nrows=self.stream_length,
-                                 usecols=["precipitation", "temp_max", "temp_min", "wind", "weather"])
+                         usecols=["precipitation", "temp_max", "temp_min", "wind", "weather"])
         class_dict = {"drizzle": 0, "rain": 1, "sun": 2, "snow": 3, "fog": 4}
         df["weather"] = df["weather"].apply(lambda x: class_dict[x])
 
-        feature_dim = df.shape[1]-1
-        class_dim = int(df.iloc[:, feature_dim].max())+1
+        feature_dim = df.shape[1] - 1
+        class_dim = int(df.iloc[:, feature_dim].max()) + 1
         stream = RealDriftGenerator(df)
 
         if drift_dict is not None:
@@ -178,7 +176,7 @@ class weatherDataset(Dataset):
 if __name__ == "__main__":
     drift_dict = {500: (100, "middle"), 1000: (100, "left"), 1500: (200, "right")}
     dset = elecDataset(drift_dict=drift_dict, online=True)
-    #csv_dir = "./AGRAWAL_p700_w100_l1000.csv"
-    #df = pd.read_csv(csv_dir)
-    #waveform_dset = multiflowDataset(csv_dir=csv_dir)
+    # csv_dir = "./AGRAWAL_p700_w100_l1000.csv"
+    # df = pd.read_csv(csv_dir)
+    # waveform_dset = multiflowDataset(csv_dir=csv_dir)
     print(dset.feature_dim, dset.class_dim)

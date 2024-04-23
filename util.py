@@ -33,7 +33,6 @@ def OnlineClassificationEvaluation(model, dataset):
 
     return loss_record, acc_record
 
-
 def standardized_euclidean_distance(p, q):
     if p.shape != q.shape:
         raise ValueError("p and q must have the same shape")
